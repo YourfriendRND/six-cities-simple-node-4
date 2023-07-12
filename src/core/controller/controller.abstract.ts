@@ -21,7 +21,11 @@ export default abstract class Controller implements ControllerInterface {
   }
 
   public addRoute = (route: RouteInterface): void => {
-    this._router[route.method](route.path, expressAsyncHandler(route.handler.bind(this)));
+    const routeHandler = expressAsyncHandler(route.handler.bind(this));
+    const middlewares = route.middlewares?.map((middleware) => expressAsyncHandler(middleware.execute.bind(this)));
+    const handlerList = middlewares ? [...middlewares, routeHandler] : routeHandler;
+
+    this._router[route.method](route.path, handlerList);
     this.logger.info(`Route registered: ${route.method.toUpperCase()} ${route.path}`);
   };
 
@@ -40,7 +44,7 @@ export default abstract class Controller implements ControllerInterface {
     this.send(res, StatusCodes.OK, data);
   };
 
-  public noContent = <T>(res: Response, data: T): void => {
+  public noContent = <T>(res: Response, data?: T): void => {
     this.send(res, StatusCodes.NO_CONTENT, data);
   };
 }

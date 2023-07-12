@@ -29,8 +29,9 @@ export default class OfferService implements OfferServiceInterface {
   public updateOffer = async (
     offerId: string,
     dto: UpdateOfferDto
-  ): Promise<DocumentType<OfferEntity> | null> => {
-    const updatedOffer = await this.offerModel.findByIdAndUpdate(offerId, dto, {new: true}).populate('authorId').exec();
+  ): Promise<Offer | null> => {
+    await this.offerModel.findByIdAndUpdate(offerId, dto).exec();
+    const updatedOffer = await this.findByOfferId(offerId);
     this.logger.info(`Offer with id: ${offerId} has been updated`);
     return updatedOffer;
   };
@@ -41,7 +42,7 @@ export default class OfferService implements OfferServiceInterface {
     return deletedOffer;
   };
 
-  public find = async (count = OfferSchemaLimits.DEFAULT_OFFER_REQUEST_LIMIT): Promise<DocumentType<OfferEntity>[]> => {
+  public find = async (limit = OfferSchemaLimits.DEFAULT_OFFER_REQUEST_LIMIT): Promise<DocumentType<OfferEntity>[]> => {
     const offers = await this.offerModel.aggregate([
       {
         $lookup: {
@@ -66,7 +67,7 @@ export default class OfferService implements OfferServiceInterface {
           }
         },
       },
-      {$limit: count},
+      {$limit: limit},
       {$sort: {'createdAt': SortType.Down}},
       {$unset: ['comments']}
     ]);

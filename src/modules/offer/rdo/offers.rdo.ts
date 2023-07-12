@@ -1,5 +1,5 @@
 import { Expose } from 'class-transformer';
-import { OfferCoordinates } from '../../../types/offer.type';
+import { OfferCoordinates } from '../../../types/offer-coordinates.js';
 
 export default class OffersRDO {
   @Expose()

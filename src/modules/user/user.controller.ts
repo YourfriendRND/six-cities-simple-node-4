@@ -12,6 +12,7 @@ import UserRDO from './rdo/user.rdo.js';
 import HTTPError from '../../core/errors/http-error.js';
 import { StatusCodes } from 'http-status-codes';
 import LoginUserDTO from './dto/login-user.dto.js';
+import ValidateDtoMiddleware from '../../core/middlewares/validate-dto.middleware.js';
 
 @injectable()
 export default class UserController extends Controller {
@@ -24,8 +25,23 @@ export default class UserController extends Controller {
 
     this.logger.info('Register routers for user controller...');
 
-    this.addRoute({path: '/register', method: HttpMethods.Post, handler: this.createUser });
-    this.addRoute({path: '/login', method: HttpMethods.Get, handler: this.loginUser });
+    this.addRoute({
+      path: '/register',
+      method: HttpMethods.Post,
+      handler: this.createUser,
+      middlewares: [
+        new ValidateDtoMiddleware(CreateUserDTO)
+      ]
+    });
+
+    this.addRoute({
+      path: '/login',
+      method: HttpMethods.Post,
+      handler: this.loginUser,
+      middlewares: [
+        new ValidateDtoMiddleware(LoginUserDTO)
+      ]
+    });
   }
 
   public createUser = async (

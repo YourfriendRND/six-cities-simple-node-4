@@ -1,5 +1,5 @@
 import { User } from '../../../types/user.type';
-import { OfferCoordinates } from '../../../types/offer.type';
+import { OfferCoordinates } from '../../../types/offer-coordinates.js';
 
 // Тип конкретного получаемого предложения из БД
 export default class ReceivedSpecificOfferDto {

@@ -18,6 +18,7 @@ export default class RestApplication {
     @inject(AppComponent.DataBaseClientInterface) private readonly databaseClient: DataBaseClientInterface,
     @inject(AppComponent.OfferController) private readonly offerController: ControllerInterface,
     @inject(AppComponent.UserController) private readonly userController: ControllerInterface,
+    @inject(AppComponent.CommentController) private readonly commentController: ControllerInterface,
     @inject(AppComponent.ExceptionFilters) private readonly exceptionFilters: ExceptionFiltersInterface
   ) {
     this.expressApp = express();
@@ -46,6 +47,7 @@ export default class RestApplication {
     this.logger.info('Routes initialization...');
     this.expressApp.use('/offers', this.offerController.router);
     this.expressApp.use('/user', this.userController.router);
+    this.expressApp.use('/comments', this.commentController.router);
   };
 
   private _initMiddleWare = async (): Promise<void> => {

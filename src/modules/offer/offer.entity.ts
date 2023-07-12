@@ -1,8 +1,9 @@
 import typegoose, { getModelForClass, defaultClasses, Ref } from '@typegoose/typegoose';
-import { OfferCoordinates } from '../../types/offer.type';
+import {Coordinates, OfferCoordinates} from '../../types/offer-coordinates.js';
 import { OfferSchemaLimits, CITIES, HOUSING_TYPES, FACILITIES } from './offer.constants.js';
 import { validateCityName, validatePhotosCount, validateRating, validateHousingType, validateFacilities } from './offer-schema-validators.js';
 import { UserEntity } from '../user/user.entity.js';
+import { Type } from 'class-transformer';
 
 const { prop, modelOptions } = typegoose;
 
@@ -13,6 +14,7 @@ export interface OfferEntity extends defaultClasses.Base {}
     collection: 'offer'
   }
 })
+
 
 export class OfferEntity extends defaultClasses.TimeStamps {
 
@@ -64,8 +66,9 @@ export class OfferEntity extends defaultClasses.TimeStamps {
     @prop({ default: 0 })
     public commentCount!: number;
 
-    @prop({ required: true, default: false })
-    public coordinates!: OfferCoordinates;
+    @prop({ required: true })
+    @Type(() => OfferCoordinates)
+    public coordinates!: Coordinates;
 
 }
 

@@ -6,8 +6,8 @@ import { Offer } from '../../types/offer.type.js';
 
 export interface OfferServiceInterface {
     create: (dto: CreateOfferDto) => Promise<DocumentType<OfferEntity>>,
-    updateOffer: (offerId: string, UpdateOfferDto: UpdateOfferDto) => Promise<DocumentType<OfferEntity> | null>,
+    updateOffer: (offerId: string, UpdateOfferDto: UpdateOfferDto) => Promise<Offer | null>,
     deleteOffer: (offerId: string) => Promise<DocumentType<OfferEntity> | null>,
-    find: (count?: number) => Promise<DocumentType<OfferEntity>[]>,
+    find: (limit?: number) => Promise<DocumentType<OfferEntity>[]>,
     findByOfferId: (offerId: string) => Promise<Offer| null>,
 }

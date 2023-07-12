@@ -1,57 +1,13 @@
-import { Expose } from 'class-transformer';
-import { OfferCoordinates } from '../../../types/offer.type';
-import { User } from '../../../types/user.type';
+import { Expose, Exclude, Type } from 'class-transformer';
+import UserRDO from '../../user/rdo/user.rdo.js';
+import OffersRDO from './offers.rdo.js';
 
-export default class OfferRDO {
+export default class OfferRDO extends OffersRDO {
   @Expose()
-  public id!: string;
+  @Type(() => UserRDO)
+  public author!: UserRDO;
 
-  @Expose()
-  public name!: string;
-
-  @Expose()
-  public description!: string;
-
-  @Expose()
-  public publishDate!: string;
-
-  @Expose()
-  public city!: string;
-
-  @Expose()
-  public prevImageUrl!: string;
-
-  @Expose()
-  public photos!: string[];
-
-  @Expose()
-  public isPremium!: boolean;
-
-  @Expose()
-  public rating!: number;
-
-  @Expose()
-  public housingType!: string;
-
-  @Expose()
-  public roomCount!: number;
-
-  @Expose()
-  public guestCount!: number;
-
-  @Expose()
-  public price!: number;
-
-  @Expose()
-  public facilities!: string[];
-
-  @Expose()
-  public author!: User;
-
-  @Expose()
-  public commentCount!: number;
-
-  @Expose()
-  public coordinates!: OfferCoordinates;
+  @Exclude()
+  public authorId!: string;
 
 }
