@@ -130,4 +130,10 @@ export default class OfferService implements OfferServiceInterface {
       author: {...targetOffer.author[0]}
     } : null;
   };
+
+  public exists = async (documentId: string): Promise<boolean> => {
+    const document = await this.offerModel.exists({_id: documentId});
+    return document !== null;
+  };
+
 }

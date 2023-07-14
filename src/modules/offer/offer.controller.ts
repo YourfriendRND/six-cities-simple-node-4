@@ -16,6 +16,7 @@ import { StatusCodes } from 'http-status-codes';
 import { EntityQuery } from '../../types/query-params.type.js';
 import ValidateObjectIdMiddleware from '../../core/middlewares/validate-objectid.middleware.js';
 import ValidateDtoMiddleware from '../../core/middlewares/validate-dto.middleware.js';
+import DocumentExistMiddleware from '../../core/middlewares/document-exists.middleware.js';
 
 type RequestOfferParams = {
   id: string;
@@ -61,7 +62,8 @@ export default class OfferController extends Controller {
       handler: this.updateOffer,
       middlewares: [
         new ValidateObjectIdMiddleware('id'),
-        new ValidateDtoMiddleware(UpdateOfferDTO)
+        new ValidateDtoMiddleware(UpdateOfferDTO),
+        new DocumentExistMiddleware(this.offerService, 'Offers', 'id')
       ]
     });
     this.addRoute({
