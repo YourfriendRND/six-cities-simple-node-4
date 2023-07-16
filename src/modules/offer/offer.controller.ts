@@ -11,8 +11,6 @@ import OffersRDO from './rdo/offers.rdo.js';
 import OfferRDO from './rdo/offer.rdo.js';
 import CreateOfferDto from './dto/create-offer.dto.js';
 import UpdateOfferDTO from './dto/update-offer.dto.js';
-import HTTPError from '../../core/errors/http-error.js';
-import { StatusCodes } from 'http-status-codes';
 import { EntityQuery } from '../../types/query-params.type.js';
 import ValidateObjectIdMiddleware from '../../core/middlewares/validate-objectid.middleware.js';
 import ValidateDtoMiddleware from '../../core/middlewares/validate-dto.middleware.js';
@@ -43,7 +41,8 @@ export default class OfferController extends Controller {
       method: HttpMethods.Get,
       handler: this.exactOffer,
       middlewares: [
-        new ValidateObjectIdMiddleware('id')
+        new ValidateObjectIdMiddleware('id'),
+        new DocumentExistMiddleware(this.offerService, 'Offers', 'id')
       ]
     });
 
@@ -71,7 +70,8 @@ export default class OfferController extends Controller {
       method: HttpMethods.Delete,
       handler: this.deleteOffer,
       middlewares: [
-        new ValidateObjectIdMiddleware('id')
+        new ValidateObjectIdMiddleware('id'),
+        new DocumentExistMiddleware(this.offerService, 'Offers', 'id')
       ]
     });
   }
@@ -90,15 +90,6 @@ export default class OfferController extends Controller {
     res: Response
   ): Promise<void> => {
     const offer = await this.offerService.findByOfferId(params.id);
-
-    if (!offer) {
-      throw new HTTPError(
-        StatusCodes.NOT_FOUND,
-        `Offer with id: ${params.id} not found`,
-        'OfferController'
-      );
-    }
-
     const offerResponse = fillDTO(OfferRDO, offer);
     this.ok(res, offerResponse);
   };
@@ -116,32 +107,19 @@ export default class OfferController extends Controller {
 
     const offer = await this.offerService.findByOfferId(params.id);
 
-    if (!offer) {
-      throw new HTTPError(
-        StatusCodes.NOT_FOUND,
-        `Offer with id: ${params.id} not found`,
-        'OfferController'
-      );
+    if (offer) {
+      const updatedOffer = await this.offerService.updateOffer(params.id, {...body, rating: offer.rating, commentCount: offer.commentCount});
+      this.created(res, fillDTO(OfferRDO, updatedOffer));
     }
 
-    const updatedOffer = await this.offerService.updateOffer(params.id, {...body, rating: offer.rating, commentCount: offer.commentCount});
-    this.created(res, fillDTO(OfferRDO, updatedOffer));
+    this.noContent(res);
+
   };
 
   public deleteOffer = async (
     { params }: Request<core.ParamsDictionary | RequestOfferParams>,
     res: Response
   ): Promise<void> => {
-    const offer = this.offerService.findByOfferId(params.id);
-
-    if (!offer) {
-      throw new HTTPError(
-        StatusCodes.NOT_FOUND,
-        `Offer with id: ${params.id} not found`,
-        'OfferController'
-      );
-    }
-
     await this.offerService.deleteOffer(params.id);
     this.noContent(res);
   };

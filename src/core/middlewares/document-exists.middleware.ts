@@ -11,8 +11,8 @@ export default class DocumentExist implements MiddlewareInterface {
     private readonly paramName: string,
   ) {}
 
-  public execute = async ({ params }: Request, _res: Response, next: NextFunction): Promise<void> => {
-    const documentId = params[this.paramName];
+  public execute = async ({ params, body }: Request, _res: Response, next: NextFunction): Promise<void> => {
+    const documentId = params[this.paramName] ? params[this.paramName] : body[this.paramName];
     const document = await this.service.exists(documentId);
 
     if (!document) {

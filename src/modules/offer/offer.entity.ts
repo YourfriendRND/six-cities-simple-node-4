@@ -15,7 +15,6 @@ export interface OfferEntity extends defaultClasses.Base {}
   }
 })
 
-
 export class OfferEntity extends defaultClasses.TimeStamps {
 
     @prop({ required: true, minlength: OfferSchemaLimits.MIN_NAME_LENGTH, maxlength: OfferSchemaLimits.MAX_NAME_LENGTH })
