@@ -11,7 +11,7 @@ export default class ValidateObjectIdMiddleware implements MiddlewareInterface {
     private readonly param: string,
   ) {}
 
-  execute = (
+  public execute = (
     { params }: Request<ParamsDictionary>,
     _res: Response,
     next: NextFunction

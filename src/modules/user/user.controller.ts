@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
+import * as core from 'express-serve-static-core';
 import ConfigService from '../../core/config/config.service.js';
 import Controller from '../../core/controller/controller.abstract.js';
 import { fillDTO } from '../../core/helpers/common.js';
@@ -12,7 +13,12 @@ import UserRDO from './rdo/user.rdo.js';
 import HTTPError from '../../core/errors/http-error.js';
 import { StatusCodes } from 'http-status-codes';
 import LoginUserDTO from './dto/login-user.dto.js';
+import UpdateUserDTO from './dto/update-user.dto.js';
 import ValidateDtoMiddleware from '../../core/middlewares/validate-dto.middleware.js';
+
+type RequestId = {
+  id: string;
+}
 
 @injectable()
 export default class UserController extends Controller {
@@ -40,6 +46,15 @@ export default class UserController extends Controller {
       handler: this.loginUser,
       middlewares: [
         new ValidateDtoMiddleware(LoginUserDTO)
+      ]
+    });
+
+    this.addRoute({
+      path: '/avatar/:id',
+      method: HttpMethods.Patch,
+      handler: this.addUserAvatar,
+      middlewares: [
+
       ]
     });
   }
@@ -81,6 +96,11 @@ export default class UserController extends Controller {
       'UserController'
     );
 
+  };
+
+  public addUserAvatar = async ({ params, body }: Request<core.ParamsDictionary | RequestId, Record<string, unknown>, UpdateUserDTO>, _res: Response, _next: NextFunction) => {
+    this.logger.info(params.id);
+    this.logger.info(body.avatarUrl);
   };
 
 }
