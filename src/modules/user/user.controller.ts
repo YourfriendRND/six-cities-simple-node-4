@@ -15,6 +15,8 @@ import { StatusCodes } from 'http-status-codes';
 import LoginUserDTO from './dto/login-user.dto.js';
 import UpdateUserDTO from './dto/update-user.dto.js';
 import ValidateDtoMiddleware from '../../core/middlewares/validate-dto.middleware.js';
+import DocumentExist from '../../core/middlewares/document-exists.middleware.js';
+import UploadFileMiddleware from '../../core/middlewares/upload-file.middleware.js';
 
 type RequestId = {
   id: string;
@@ -51,10 +53,11 @@ export default class UserController extends Controller {
 
     this.addRoute({
       path: '/avatar/:id',
-      method: HttpMethods.Patch,
+      method: HttpMethods.Post,
       handler: this.addUserAvatar,
       middlewares: [
-
+        new DocumentExist(this.userService, 'User', 'id'),
+        new UploadFileMiddleware(this.configService.get('UPLOAD_DIR'), 'avatar')
       ]
     });
   }
@@ -98,9 +101,12 @@ export default class UserController extends Controller {
 
   };
 
-  public addUserAvatar = async ({ params, body }: Request<core.ParamsDictionary | RequestId, Record<string, unknown>, UpdateUserDTO>, _res: Response, _next: NextFunction) => {
-    this.logger.info(params.id);
-    this.logger.info(body.avatarUrl);
+  public addUserAvatar = async (
+    { file }: Request<core.ParamsDictionary | RequestId, Record<string, unknown>, UpdateUserDTO>,
+    res: Response,
+    _next: NextFunction
+  ) => {
+    this.created(res, file?.path);
   };
 
 }

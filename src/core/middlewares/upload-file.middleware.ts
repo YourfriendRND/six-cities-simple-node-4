@@ -17,6 +17,8 @@ export default class UploadFileMiddleware implements MiddlewareInterface {
       filename: (_req, file, callback) => {
         const extention = mime.extension(file.mimetype);
         const fileName = nanoid();
+        console.log(extention);
+        console.log(fileName);
         callback(null, `${fileName}.${extention}`);
       }
     });
