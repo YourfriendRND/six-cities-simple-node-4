@@ -7,8 +7,6 @@ import { AppComponent } from '../../types/app-components.enum.js';
 import { HttpMethods } from '../../types/http-methods.enum.js';
 import { CommentServiceInterface } from './comment-service.interface.js';
 import { OfferServiceInterface } from '../offer/offer-service.interface.js';
-import HTTPError from '../../core/errors/http-error.js';
-import { StatusCodes } from 'http-status-codes';
 import CreateCommentDto from './dto/create-comment.dto.js';
 import CommentRdo from './rdo/comment.rdo.js';
 import { fillDTO } from '../../core/helpers/common.js';
@@ -16,6 +14,8 @@ import { EntityQuery } from '../../types/query-params.type';
 import { CommentSchemaLimits } from './comment.contants.js';
 import ValidateDtoMiddleware from '../../core/middlewares/validate-dto.middleware.js';
 import ValidateObjectIdMiddleware from '../../core/middlewares/validate-objectid.middleware.js';
+import DocumentExist from '../../core/middlewares/document-exists.middleware.js';
+import { UserServiceInterface } from '../user/user-service.interface.js';
 
 type CommentParams = {
   offerId: string;
@@ -27,6 +27,7 @@ export default class CommentController extends Controller {
     @inject(AppComponent.LoggerInterface) protected readonly logger: LoggerInterface,
     @inject(AppComponent.CommentServiceInterface) private readonly commentService: CommentServiceInterface,
     @inject(AppComponent.OfferServiceInterface) private readonly offerService: OfferServiceInterface,
+    @inject(AppComponent.UserServiceInterface) private readonly userService: UserServiceInterface
   ) {
     super(logger);
 
@@ -37,7 +38,8 @@ export default class CommentController extends Controller {
       method: HttpMethods.Get,
       handler: this.index,
       middlewares: [
-        new ValidateObjectIdMiddleware('offerId')
+        new ValidateObjectIdMiddleware('offerId'),
+        new DocumentExist(this.offerService, 'Offers', 'offerId')
       ]
     });
 
@@ -47,7 +49,9 @@ export default class CommentController extends Controller {
       handler: this.createComment,
       middlewares: [
         new ValidateObjectIdMiddleware('offerId'),
-        new ValidateDtoMiddleware(CreateCommentDto)
+        new ValidateDtoMiddleware(CreateCommentDto),
+        new DocumentExist(this.offerService, 'Offers', 'offerId'),
+        new DocumentExist(this.userService, 'Users', 'authorId')
       ]
     });
   }
@@ -56,15 +60,6 @@ export default class CommentController extends Controller {
     { params, query }: Request<core.ParamsDictionary | CommentParams, unknown, unknown, EntityQuery>,
     res: Response
   ): Promise<void> => {
-    const offer = await this.offerService.findByOfferId(params.offerId);
-
-    if (!offer) {
-      throw new HTTPError(
-        StatusCodes.NOT_FOUND,
-        `Offer with id: ${params.offerId} doesn't exist`,
-        'CommentController'
-      );
-    }
     // Ограничение выгрузки комментариев до 50
     const limit = Number(query.limit) > CommentSchemaLimits.REQUEST_COMMENTS_LIMIT
       ? CommentSchemaLimits.REQUEST_COMMENTS_LIMIT
@@ -78,20 +73,10 @@ export default class CommentController extends Controller {
     { params, body }: Request<core.ParamsDictionary | CommentParams, Record<string, unknown>, CreateCommentDto>,
     res: Response
   ): Promise<void> => {
-    const offer = await this.offerService.findByOfferId(params.offerId);
-
-    if (!offer) {
-      throw new HTTPError(
-        StatusCodes.NOT_FOUND,
-        `Imposible to create new comment, offer with id: ${params.offerId} doesn't exist`,
-        'CommentController'
-      );
-    }
 
     const createdComment = await this.commentService.createComment({...body, offerId: params.offerId });
 
     this.created(res, fillDTO(CommentRdo, createdComment));
-
   };
 
 }
