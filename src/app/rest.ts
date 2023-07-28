@@ -8,6 +8,7 @@ import { AppComponent } from '../types/app-components.enum.js';
 import { getDataBaseUri } from '../core/helpers/index.js';
 import { ExceptionFiltersInterface } from '../core/exception-filters/exception-filters.interface';
 import { ControllerInterface } from '../core/controller/controller.interface';
+import AuthenticateMiddleware from '../core/middlewares/authenticate.middleware.js';
 
 @injectable()
 export default class RestApplication {
@@ -58,6 +59,8 @@ export default class RestApplication {
       '/upload',
       express.static(this.config.get('UPLOAD_DIR'))
     );
+    const authenticateMiddleware = new AuthenticateMiddleware(this.config.get('JWT_SECRET'));
+    this.expressApp.use(authenticateMiddleware.execute.bind(authenticateMiddleware));
   };
 
   private _initExceptionFilters = async (): Promise<void> => {

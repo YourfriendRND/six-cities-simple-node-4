@@ -14,11 +14,10 @@ export class OfferCoordinates implements Coordinates {
   @IsDefined()
   @IsString()
   @IsLongitude()
-    longtitude!: string;
+  public longtitude!: string;
 
   @IsDefined()
   @IsString()
   @IsLatitude()
-    latitude!: string;
-
+  public latitude!: string;
 }
