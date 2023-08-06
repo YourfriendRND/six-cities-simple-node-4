@@ -136,4 +136,10 @@ export default class OfferService implements OfferServiceInterface {
     return document !== null;
   };
 
+  public isOwner = async (documentId: string, authorId: string): Promise<boolean> => {
+    const document = await this.offerModel.findById(documentId).exec();
+    const author = String(document?.authorId);
+    return author === authorId;
+  };
+
 }

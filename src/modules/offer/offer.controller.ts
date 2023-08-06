@@ -15,6 +15,8 @@ import { EntityQuery } from '../../types/query-params.type.js';
 import ValidateObjectIdMiddleware from '../../core/middlewares/validate-objectid.middleware.js';
 import ValidateDtoMiddleware from '../../core/middlewares/validate-dto.middleware.js';
 import DocumentExistMiddleware from '../../core/middlewares/document-exists.middleware.js';
+import PrivateRouteMiddleware from '../../core/middlewares/private-route.middleware.js';
+import OwnerEntityMiddleware from '../../core/middlewares/owner-entity.middleware.js';
 
 type RequestOfferParams = {
   id: string;
@@ -51,6 +53,7 @@ export default class OfferController extends Controller {
       method: HttpMethods.Post,
       handler: this.createOffer,
       middlewares: [
+        new PrivateRouteMiddleware(),
         new ValidateDtoMiddleware(CreateOfferDto)
       ]
     });
@@ -60,9 +63,11 @@ export default class OfferController extends Controller {
       method: HttpMethods.Patch,
       handler: this.updateOffer,
       middlewares: [
+        new PrivateRouteMiddleware(),
         new ValidateObjectIdMiddleware('id'),
         new ValidateDtoMiddleware(UpdateOfferDTO),
-        new DocumentExistMiddleware(this.offerService, 'Offers', 'id')
+        new DocumentExistMiddleware(this.offerService, 'Offers', 'id'),
+        new OwnerEntityMiddleware(this.offerService, 'Offers', 'id')
       ]
     });
     this.addRoute({
@@ -71,7 +76,8 @@ export default class OfferController extends Controller {
       handler: this.deleteOffer,
       middlewares: [
         new ValidateObjectIdMiddleware('id'),
-        new DocumentExistMiddleware(this.offerService, 'Offers', 'id')
+        new DocumentExistMiddleware(this.offerService, 'Offers', 'id'),
+        new OwnerEntityMiddleware(this.offerService, 'Offers', 'id')
       ]
     });
   }
@@ -95,9 +101,9 @@ export default class OfferController extends Controller {
   };
 
   public createOffer = async (
-    { body }: Request<Record<string, unknown>, Record<string, unknown>, CreateOfferDto>,
+    { body, user }: Request<Record<string, unknown>, Record<string, unknown>, CreateOfferDto>,
     res: Response): Promise<void> => {
-    const createdOffer = await this.offerService.create({...body, rating: 1, commentCount: 0});
+    const createdOffer = await this.offerService.create({...body, authorId: user.id, rating: 1, commentCount: 0});
     this.created(res, fillDTO(OffersRDO, createdOffer));
   };
 
@@ -110,6 +116,7 @@ export default class OfferController extends Controller {
     if (offer) {
       const updatedOffer = await this.offerService.updateOffer(params.id, {...body, rating: offer.rating, commentCount: offer.commentCount});
       this.created(res, fillDTO(OfferRDO, updatedOffer));
+      return;
     }
 
     this.noContent(res);

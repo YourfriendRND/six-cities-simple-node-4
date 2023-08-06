@@ -15,7 +15,6 @@ import {
   Max,
   IsInt,
   IsIn,
-  IsMongoId,
   IsObject,
   IsNotEmptyObject,
   ValidateNested,
@@ -78,7 +77,6 @@ export default class CreateOfferDto {
   @IsIn(FACILITIES, {message: offerValidateErrorMessage.facilities.incorrectFacilityMessage, each: true })
   public facilities!: string[];
 
-  @IsMongoId({message: offerValidateErrorMessage.authorId.message })
   public authorId!: string;
 
   public commentCount!: number;

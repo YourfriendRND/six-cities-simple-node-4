@@ -15,8 +15,12 @@ import { StatusCodes } from 'http-status-codes';
 import LoginUserDTO from './dto/login-user.dto.js';
 import UpdateUserDTO from './dto/update-user.dto.js';
 import ValidateDtoMiddleware from '../../core/middlewares/validate-dto.middleware.js';
+import { createJWT } from '../../core/helpers/user.js';
+import { JWT_ALGORITHM } from './user.constants.js';
+import LoginUserRDO from './rdo/login-user.rdo.js';
 import DocumentExist from '../../core/middlewares/document-exists.middleware.js';
 import UploadFileMiddleware from '../../core/middlewares/upload-file.middleware.js';
+
 
 type RequestId = {
   id: string;
@@ -77,13 +81,16 @@ export default class UserController extends Controller {
     }
 
     const createdUser = await this.userService.create(body, this.configService.get('SALT'));
+
     this.created(res, fillDTO(UserRDO, createdUser));
   };
 
   public loginUser = async (
     { body }: Request<Record<string, unknown>, Record<string, unknown>, LoginUserDTO>,
-    _res: Response, _next: NextFunction): Promise<void> => {
-    const existUser = await this.userService.findByEmail(body.email);
+    res: Response,
+    _next: NextFunction): Promise<void> => {
+
+    const existUser = await this.userService.verifyUser(body, this.configService.get('SALT'));
 
     if (!existUser) {
       throw new HTTPError(
@@ -93,12 +100,9 @@ export default class UserController extends Controller {
       );
     }
 
-    throw new HTTPError(
-      StatusCodes.NOT_IMPLEMENTED,
-      'This case will be implemented in the future',
-      'UserController'
-    );
+    const token = await createJWT(JWT_ALGORITHM, this.configService.get('JWT_SECRET'), { email: existUser.email, userId: existUser.id });
 
+    this.ok(res, fillDTO(LoginUserRDO, {email: existUser.email, token }));
   };
 
   public addUserAvatar = async (

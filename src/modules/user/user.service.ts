@@ -5,6 +5,7 @@ import CreateUserDTO from './dto/create-user.dto.js';
 import { UserServiceInterface } from './user-service.interface';
 import { AppComponent } from '../../types/app-components.enum.js';
 import { LoggerInterface } from '../../core/logger/logger.interface.js';
+import loginUserDto from './dto/login-user.dto.js';
 
 @injectable()
 export default class UserService implements UserServiceInterface {
@@ -30,6 +31,25 @@ export default class UserService implements UserServiceInterface {
     const existedUser = await this.findByEmail(dto.email);
 
     return existedUser ?? await this.create(dto, salt);
+
+  };
+
+  public verifyUser = async (dto: loginUserDto, salt: string): Promise<DocumentType<UserEntity> | null> => {
+    const userRow = await this.findByEmail(dto.email);
+
+    if (!userRow) {
+      return null;
+    }
+
+    const user = new UserEntity(userRow);
+    user.setPassword(dto.password, salt);
+    const isRealUser = user.verifyPassword(dto.password, salt);
+
+    if (isRealUser) {
+      return userRow;
+    }
+
+    return null;
 
   };
 

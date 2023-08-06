@@ -9,7 +9,7 @@ export default class GenerateCommand implements CliCommandInterface {
   public readonly name = '--generate';
   private initialData!: MockOffer;
 
-  execute = async (...params: string[]): Promise<void> => {
+  public execute = async (...params: string[]): Promise<void> => {
     const [count, filepath, url] = params;
     const offerCount = Number(count);
 

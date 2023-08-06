@@ -15,7 +15,7 @@ import { CommentSchemaLimits } from './comment.contants.js';
 import ValidateDtoMiddleware from '../../core/middlewares/validate-dto.middleware.js';
 import ValidateObjectIdMiddleware from '../../core/middlewares/validate-objectid.middleware.js';
 import DocumentExist from '../../core/middlewares/document-exists.middleware.js';
-import { UserServiceInterface } from '../user/user-service.interface.js';
+import PrivateRouteMiddleware from '../../core/middlewares/private-route.middleware.js';
 
 type CommentParams = {
   offerId: string;
@@ -27,7 +27,6 @@ export default class CommentController extends Controller {
     @inject(AppComponent.LoggerInterface) protected readonly logger: LoggerInterface,
     @inject(AppComponent.CommentServiceInterface) private readonly commentService: CommentServiceInterface,
     @inject(AppComponent.OfferServiceInterface) private readonly offerService: OfferServiceInterface,
-    @inject(AppComponent.UserServiceInterface) private readonly userService: UserServiceInterface
   ) {
     super(logger);
 
@@ -48,10 +47,10 @@ export default class CommentController extends Controller {
       method: HttpMethods.Post,
       handler: this.createComment,
       middlewares: [
+        new PrivateRouteMiddleware(),
         new ValidateObjectIdMiddleware('offerId'),
         new ValidateDtoMiddleware(CreateCommentDto),
         new DocumentExist(this.offerService, 'Offers', 'offerId'),
-        new DocumentExist(this.userService, 'Users', 'authorId')
       ]
     });
   }
@@ -70,11 +69,11 @@ export default class CommentController extends Controller {
   };
 
   public createComment = async (
-    { params, body }: Request<core.ParamsDictionary | CommentParams, Record<string, unknown>, CreateCommentDto>,
+    { params, body, user }: Request<core.ParamsDictionary | CommentParams, Record<string, unknown>, CreateCommentDto>,
     res: Response
   ): Promise<void> => {
 
-    const createdComment = await this.commentService.createComment({...body, offerId: params.offerId });
+    const createdComment = await this.commentService.createComment({...body, authorId: user.id, offerId: params.offerId });
 
     this.created(res, fillDTO(CommentRdo, createdComment));
   };

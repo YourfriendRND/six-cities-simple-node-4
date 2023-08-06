@@ -1,11 +1,6 @@
 import { User } from './user.type';
 import { OfferCoordinates } from './offer-coordinates.js';
 
-// export type OfferCoordinates = {
-//   longtitude: string;
-//   latitude: string;
-// };
-
 export type Offer = {
   id?: string;
   name: string;
