@@ -3,7 +3,6 @@ import {
   MaxLength,
   Max,
   Min,
-  IsMongoId,
   IsNumber,
   IsOptional
 } from 'class-validator';
@@ -20,7 +19,6 @@ export default class CreateCommentDto {
   @IsNumber({maxDecimalPlaces: 1}, {message: commentValidateErrorMessage.rating.decimalMessage})
   public rating!: number;
 
-  @IsMongoId({message: commentValidateErrorMessage.authorId.message })
   public authorId!: string;
 
   @IsOptional()

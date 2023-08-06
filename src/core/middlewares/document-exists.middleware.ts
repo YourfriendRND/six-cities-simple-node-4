@@ -23,6 +23,6 @@ export default class DocumentExist implements MiddlewareInterface {
       );
     }
 
-    next();
+    return next();
   };
 }

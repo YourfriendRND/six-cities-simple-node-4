@@ -77,6 +77,7 @@ export default class UserController extends Controller {
     }
 
     const createdUser = await this.userService.create(body, this.configService.get('SALT'));
+
     this.created(res, fillDTO(UserRDO, createdUser));
   };
 

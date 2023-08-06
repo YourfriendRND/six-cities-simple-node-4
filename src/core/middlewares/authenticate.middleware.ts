@@ -25,7 +25,7 @@ export default class AuthenticateMiddleware implements MiddlewareInterface {
 
       req.user = {
         email: payload.email as string,
-        id: payload.id as string
+        id: payload.userId as string
       };
 
       return next();

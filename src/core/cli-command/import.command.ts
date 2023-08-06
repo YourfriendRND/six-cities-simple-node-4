@@ -54,7 +54,7 @@ export default class ImportCommand implements CliCommandInterface {
     this.databaseClient.disconnect();
   };
 
-  execute = async (fileName: string, login: string, password: string, host: string, databaseName: string, salt: string): Promise<void> => {
+  public execute = async (fileName: string, login: string, password: string, host: string, databaseName: string, salt: string): Promise<void> => {
     const uriConnection = getDataBaseUri(
       login,
       password,
