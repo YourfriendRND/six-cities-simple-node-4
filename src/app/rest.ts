@@ -1,4 +1,5 @@
 import express, { Express } from 'express';
+import cors from 'cors';
 import { ConfigInterface } from '../core/config/config.interface';
 import { LoggerInterface } from '../core/logger/logger.interface';
 import { DataBaseClientInterface } from '../core/database-client/database-client.interface';
@@ -55,6 +56,7 @@ export default class RestApplication {
     this.logger.info('Global middleware initialization...');
     this.expressApp.use(express.json());
     this.expressApp.use(express.urlencoded({ extended: true }));
+    this.expressApp.use(cors());
     this.expressApp.use(
       '/upload',
       express.static(this.config.get('UPLOAD_DIR'))
