@@ -18,6 +18,7 @@ import ValidateDtoMiddleware from '../../core/middlewares/validate-dto.middlewar
 import { createJWT } from '../../core/helpers/user.js';
 import { JWT_ALGORITHM } from './user.constants.js';
 import LoginUserRDO from './rdo/login-user.rdo.js';
+import AuthenticateMiddleware from '../../core/middlewares/authenticate.middleware.js';
 
 type RequestId = {
   id: string;
@@ -53,6 +54,15 @@ export default class UserController extends Controller {
     });
 
     this.addRoute({
+      path: '/login',
+      method: HttpMethods.Get,
+      handler: this.checkLogin,
+      middlewares: [
+        new AuthenticateMiddleware(this.configService.get('JWT_SECRET'))
+      ]
+    });
+
+    this.addRoute({
       path: '/avatar/:id',
       method: HttpMethods.Patch,
       handler: this.addUserAvatar,
@@ -77,8 +87,17 @@ export default class UserController extends Controller {
     }
 
     const createdUser = await this.userService.create(body, this.configService.get('SALT'));
+    const token = await createJWT(JWT_ALGORITHM, this.configService.get('JWT_SECRET'), { email: createdUser.email, userId: createdUser.id });
+    const unitedUser = {
+      id: createdUser.id,
+      token,
+      avatarUrl: createdUser.avatarUrl,
+      email: createdUser.email,
+      isPro: createdUser.isPro,
+      name: createdUser.name
+    };
 
-    this.created(res, fillDTO(UserRDO, createdUser));
+    this.created(res, fillDTO(UserRDO, unitedUser));
   };
 
   public loginUser = async (
@@ -98,7 +117,24 @@ export default class UserController extends Controller {
 
     const token = await createJWT(JWT_ALGORITHM, this.configService.get('JWT_SECRET'), { email: existUser.email, userId: existUser.id });
 
-    this.ok(res, fillDTO(LoginUserRDO, {email: existUser.email, token }));
+    this.ok(res, fillDTO(LoginUserRDO, {name: existUser.name, email: existUser.email, token}));
+  };
+
+  public checkLogin = async (
+    { user }: Request<Record<string, unknown>, Record<string, unknown>>,
+    res: Response,
+    _next: NextFunction
+  ) => {
+    const userDetails = await this.userService.findByEmail(user.email);
+    if (!userDetails) {
+      throw new HTTPError(
+        StatusCodes.UNAUTHORIZED,
+        `User with email: ${user.email} not exist`,
+        'UserController'
+      );
+    }
+
+    this.ok(res, fillDTO(UserRDO, userDetails));
   };
 
   public addUserAvatar = async ({ params, body }: Request<core.ParamsDictionary | RequestId, Record<string, unknown>, UpdateUserDTO>, _res: Response, _next: NextFunction) => {

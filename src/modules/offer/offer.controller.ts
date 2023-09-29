@@ -87,7 +87,8 @@ export default class OfferController extends Controller {
     res: Response
   ): Promise<void> => {
     const offers = await this.offerService.find(query.limit);
-    const offersResponse = fillDTO(OffersRDO, offers);
+    console.log(offers);
+    const offersResponse = offers.length ? fillDTO(OffersRDO, offers) : [];
     this.ok(res, offersResponse);
   };
 

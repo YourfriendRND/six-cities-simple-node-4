@@ -27,6 +27,7 @@ export default class CreateUserDTO {
   public avatarUrl?: string;
 
   @IsBoolean({message: userValidateErrorMessage.isPro.message })
+  @IsOptional()
   public isPro!: boolean;
 
 }
