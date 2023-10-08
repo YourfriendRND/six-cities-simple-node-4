@@ -21,7 +21,8 @@ export default class RestApplication {
     @inject(AppComponent.OfferController) private readonly offerController: ControllerInterface,
     @inject(AppComponent.UserController) private readonly userController: ControllerInterface,
     @inject(AppComponent.CommentController) private readonly commentController: ControllerInterface,
-    @inject(AppComponent.ExceptionFilters) private readonly exceptionFilters: ExceptionFiltersInterface
+    @inject(AppComponent.ExceptionFilters) private readonly exceptionFilters: ExceptionFiltersInterface,
+    @inject(AppComponent.FavoriteController) private readonly favoriteController: ControllerInterface,
   ) {
     this.expressApp = express();
   }
@@ -50,6 +51,7 @@ export default class RestApplication {
     this.expressApp.use('/offers', this.offerController.router);
     this.expressApp.use('/user', this.userController.router);
     this.expressApp.use('/comments', this.commentController.router);
+    this.expressApp.use('/favorite', this.favoriteController.router);
   };
 
   private _initMiddleWare = async (): Promise<void> => {

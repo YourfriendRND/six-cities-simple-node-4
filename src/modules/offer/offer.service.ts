@@ -6,7 +6,7 @@ import UpdateOfferDto from './dto/update-offer.dto.js';
 import { OfferServiceInterface } from './offer-service.interface';
 import { AppComponent } from '../../types/app-components.enum.js';
 import { LoggerInterface } from '../../core/logger/logger.interface.js';
-import { OfferSchemaLimits } from './offer.constants.js';
+import { CITIES, OfferSchemaLimits } from './offer.constants.js';
 import { SortType } from '../../types/sort-type.enum.js';
 import { Offer } from '../../types/offer.type.js';
 import ReceivedSpecificOfferDto from './dto/received-specific-offer.dto.js';
@@ -42,8 +42,16 @@ export default class OfferService implements OfferServiceInterface {
     return deletedOffer;
   };
 
-  public find = async (limit = OfferSchemaLimits.DEFAULT_OFFER_REQUEST_LIMIT): Promise<DocumentType<OfferEntity>[]> => {
+  public find = async (
+    city = CITIES[0],
+    limit = OfferSchemaLimits.DEFAULT_OFFER_REQUEST_LIMIT,
+    ownerId?: string,
+  ): Promise<DocumentType<OfferEntity>[]> => {
+    console.log(city, ownerId);
     const offers = await this.offerModel.aggregate([
+      {
+        $match: {'isActive': true, 'city': city}
+      },
       {
         $lookup: {
           from: 'comments',
@@ -54,22 +62,50 @@ export default class OfferService implements OfferServiceInterface {
           as: 'comments'
         }
       },
-      { $addFields:
-        { id: { $toString: '$_id'},
-          authorId: { $toString: '$authorId'},
-          commentCount: { $size: '$comments'},
-          rating: {
-            $cond: {
-              if: { $eq: [{$size: '$comments'}, 0] },
-              then: 0,
-              else: { $round: [{$divide: [ {$sum: '$comments.rating'},{ $size: '$comments'}]}, 1]}
-            }
+      {
+        $lookup: {
+          from: 'favorites',
+          let: {userId: ownerId},
+          pipeline: [
+            {$match:  {$expr: { $eq: [{ $toObjectId: '$$userId'}, '$userId'] } }},
+          ],
+          as: 'favorites'
+        }
+      },
+      {
+        $addFields: {
+          favoriteOfferIds: {
+            $map: {
+              input:'$favorites',
+              as: 'item',
+              in: '$$item.offerId'
+            },
+          }
+        }
+      },
+      { $addFields: {
+        id: { $toString: '$_id'},
+        authorId: { $toString: '$authorId'},
+        commentCount: { $size: '$comments'},
+        rating: {
+          $cond: {
+            if: { $eq: [{$size: '$comments'}, 0] },
+            then: 0,
+            else: { $round: [{$divide: [ {$sum: '$comments.rating'},{ $size: '$comments'}]}, 1]}
           }
         },
+        isFavorite: {
+          $cond: {
+            if: { $in: ['$_id', '$favoriteOfferIds']},
+            then: true,
+            else: false
+          }
+        }
+      },
       },
       {$limit: limit},
       {$sort: {'createdAt': SortType.Down}},
-      {$unset: ['comments']}
+      {$unset: ['comments', 'favoriteOfferIds', 'favorites']}
     ]);
 
     return offers;
@@ -77,7 +113,8 @@ export default class OfferService implements OfferServiceInterface {
 
 
   public findByOfferId = async (
-    offerId: string
+    offerId: string,
+    userId?: string,
   ): Promise<Offer | null> => {
     const offers = await this.offerModel.aggregate<DocumentType<ReceivedSpecificOfferDto>>([
       { $match: { $expr : { $eq: [ '$_id' , { $toObjectId: offerId } ] } } },
@@ -101,6 +138,27 @@ export default class OfferService implements OfferServiceInterface {
           as: 'author',
         },
       },
+      {
+        $lookup: {
+          from: 'favorites',
+          let: {userId: userId},
+          pipeline: [
+            {$match:  {$expr: { $eq: [{ $toObjectId: '$$userId'}, '$userId'] } }},
+          ],
+          as: 'favorites'
+        }
+      },
+      {
+        $addFields: {
+          favoriteOfferIds: {
+            $map: {
+              input:'$favorites',
+              as: 'item',
+              in: '$$item.offerId'
+            },
+          }
+        }
+      },
       { $addFields:
         { id: { $toString: '$_id'},
           commentCount: { $size: '$comments'},
@@ -109,6 +167,13 @@ export default class OfferService implements OfferServiceInterface {
               if: { $eq: [{$size: '$comments'}, 0] },
               then: 0,
               else: { $round: [{$divide: [ {$sum: '$comments.rating'},{ $size: '$comments'}]}, 1]}
+            }
+          },
+          isFavorite: {
+            $cond: {
+              if: { $in: ['$_id', '$favoriteOfferIds']},
+              then: true,
+              else: false
             }
           }
         },
@@ -121,6 +186,8 @@ export default class OfferService implements OfferServiceInterface {
         'author.email',
         'author.updatedAt',
         'author.__v',
+        'favoriteOfferIds',
+        'favorites'
       ]}
     ]).exec();
 

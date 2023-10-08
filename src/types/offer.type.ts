@@ -19,4 +19,5 @@ export type Offer = {
   author: User;
   commentCount: number;
   coordinates: OfferCoordinates;
+  isActive: boolean;
 };

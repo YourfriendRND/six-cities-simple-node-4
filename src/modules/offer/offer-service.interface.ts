@@ -10,6 +10,6 @@ export interface OfferServiceInterface extends DocumentExistsInterface, Document
   create: (dto: CreateOfferDto) => Promise<DocumentType<OfferEntity>>,
   updateOffer: (offerId: string, UpdateOfferDto: UpdateOfferDto) => Promise<Offer | null>,
   deleteOffer: (offerId: string) => Promise<DocumentType<OfferEntity> | null>,
-  find: (limit?: number) => Promise<DocumentType<OfferEntity>[]>,
-  findByOfferId: (offerId: string) => Promise<Offer| null>,
+  find: (city: string, limit?: number, ownerId?: string) => Promise<DocumentType<OfferEntity>[]>,
+  findByOfferId: (offerId: string, userId?: string) => Promise<Offer| null>,
 }

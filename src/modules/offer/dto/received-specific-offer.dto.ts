@@ -20,4 +20,5 @@ export default class ReceivedSpecificOfferDto {
   public author!: User[];
   public commentCount!: number;
   public coordinates!: OfferCoordinates;
+  public isActive!: boolean;
 }

@@ -30,12 +30,13 @@ export default class OfferGenerator implements OfferGeneratorInterface {
       getRandomItem<string>(this.mockOffers.coordinates[cityName].latitude),
       getRandomItem<string>(this.mockOffers.coordinates[cityName].longitude)
     ].join(';');
+    const isActiveOffer = getRandomFlag() ? 'active' : '';
 
     return [
       placeName, placeDescription, publishOfferDateTime, cityName,
       preview, offerPhotos, isPremiumOffer, rating, housingType,
       roomCount, guestCount, price, facilities, userName, userEmail,
-      userAvatar, userStatus, commentCount, coordinates
+      userAvatar, userStatus, commentCount, coordinates, isActiveOffer
     ].join('\t');
   };
 

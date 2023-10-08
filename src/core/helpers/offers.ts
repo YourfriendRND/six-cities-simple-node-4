@@ -21,9 +21,10 @@ export const convertFileLineToOffer = (offerRowLine: string): Offer => {
     authorStatus,
     commentCount,
     coordinates,
+    isActive
   ] = offerRowLine.replace('\n', '').split('\t');
 
-  const [longtitude, latitude] = coordinates.split(';');
+  const [longitude, latitude] = coordinates.split(';');
 
   return {
     name,
@@ -43,12 +44,13 @@ export const convertFileLineToOffer = (offerRowLine: string): Offer => {
       name: authorName,
       email: authorEmail,
       avatarUrl: authorAvatarUrl,
-      isPro: Boolean(authorStatus)
+      isPro: Boolean(authorStatus),
     },
     commentCount: Number(commentCount),
     coordinates: {
-      longtitude,
+      longitude,
       latitude
-    }
+    },
+    isActive: Boolean(isActive)
   };
 };

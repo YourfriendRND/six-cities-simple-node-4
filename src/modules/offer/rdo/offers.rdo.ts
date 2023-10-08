@@ -53,4 +53,9 @@ export default class OffersRDO {
   @Expose()
   public coordinates!: OfferCoordinates;
 
+  @Expose()
+  public isActive!: boolean;
+
+  @Expose()
+  public isFavorite!: boolean;
 }

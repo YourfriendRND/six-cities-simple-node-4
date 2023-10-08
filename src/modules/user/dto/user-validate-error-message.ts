@@ -7,7 +7,8 @@ export const userValidateErrorMessage = {
   },
 
   email: {
-    message: 'Email field is invalid string'
+    invalidEmail: 'Email field is invalid string',
+    emailIsEmpty: 'Email field is empty',
   },
 
   password: {

@@ -15,7 +15,7 @@ export default class CreateUserDTO {
   @MaxLength(UserSchemaLimits.MAX_NAME_LENGTH, {message: userValidateErrorMessage.name.maxLengthMessage })
   public name!: string;
 
-  @IsEmail({}, {message: userValidateErrorMessage.email.message })
+  @IsEmail({}, {message: userValidateErrorMessage.email.invalidEmail })
   public email!: string;
 
   @MinLength(UserSchemaLimits.MIN_PASSWORD_LENGTH, {message: userValidateErrorMessage.password.minLengthMessage })

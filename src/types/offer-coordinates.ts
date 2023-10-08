@@ -6,7 +6,7 @@ import {
 } from 'class-validator';
 
 export interface Coordinates {
-  longtitude: string,
+  longitude: string,
   latitude: string
 }
 
@@ -14,7 +14,7 @@ export class OfferCoordinates implements Coordinates {
   @IsDefined()
   @IsString()
   @IsLongitude()
-  public longtitude!: string;
+  public longitude!: string;
 
   @IsDefined()
   @IsString()

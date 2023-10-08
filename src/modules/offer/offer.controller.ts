@@ -26,7 +26,7 @@ type RequestOfferParams = {
 export default class OfferController extends Controller {
   constructor(
     @inject(AppComponent.LoggerInterface) protected readonly logger: LoggerInterface,
-    @inject(AppComponent.OfferServiceInterface) private readonly offerService: OfferService
+    @inject(AppComponent.OfferServiceInterface) private readonly offerService: OfferService,
   ) {
     super(logger);
 
@@ -35,7 +35,7 @@ export default class OfferController extends Controller {
     this.addRoute({
       path: '/',
       method: HttpMethods.Get,
-      handler: this.index
+      handler: this.index,
     });
 
     this.addRoute({
@@ -83,20 +83,24 @@ export default class OfferController extends Controller {
   }
 
   public index = async (
-    { query }: Request<core.ParamsDictionary, unknown, unknown, EntityQuery>,
+    { query, user }: Request<core.ParamsDictionary, unknown, unknown, EntityQuery>,
     res: Response
   ): Promise<void> => {
-    const offers = await this.offerService.find(query.limit);
+    console.log('Query to offers received');
+    const ownerId = user ? user.id : undefined;
+    const offers = await this.offerService.find(query.city, query.limit, ownerId);
     console.log(offers);
+
     const offersResponse = offers.length ? fillDTO(OffersRDO, offers) : [];
     this.ok(res, offersResponse);
   };
 
   public exactOffer = async (
-    { params }: Request<core.ParamsDictionary | RequestOfferParams>,
+    { params, user }: Request<core.ParamsDictionary | RequestOfferParams>,
     res: Response
   ): Promise<void> => {
-    const offer = await this.offerService.findByOfferId(params.id);
+    const userId = user ? user.id : undefined;
+    const offer = await this.offerService.findByOfferId(params.id, userId);
     const offerResponse = fillDTO(OfferRDO, offer);
     this.ok(res, offerResponse);
   };

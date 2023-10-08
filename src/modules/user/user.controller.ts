@@ -125,10 +125,19 @@ export default class UserController extends Controller {
     res: Response,
     _next: NextFunction
   ) => {
+
+    if (!user) {
+      throw new HTTPError(
+        StatusCodes.UNAUTHORIZED,
+        'User is unauthorized',
+        'UserController'
+      );
+    }
+
     const userDetails = await this.userService.findByEmail(user.email);
     if (!userDetails) {
       throw new HTTPError(
-        StatusCodes.UNAUTHORIZED,
+        StatusCodes.NOT_FOUND,
         `User with email: ${user.email} not exist`,
         'UserController'
       );
@@ -137,7 +146,11 @@ export default class UserController extends Controller {
     this.ok(res, fillDTO(UserRDO, userDetails));
   };
 
-  public addUserAvatar = async ({ params, body }: Request<core.ParamsDictionary | RequestId, Record<string, unknown>, UpdateUserDTO>, _res: Response, _next: NextFunction) => {
+  public addUserAvatar = async (
+    { params, body }: Request<core.ParamsDictionary | RequestId, Record<string, unknown>, UpdateUserDTO>,
+    _res: Response,
+    _next: NextFunction
+  ) => {
     this.logger.info(params.id);
     this.logger.info(body.avatarUrl);
   };
