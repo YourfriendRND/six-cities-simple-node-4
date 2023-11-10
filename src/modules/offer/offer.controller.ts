@@ -106,10 +106,14 @@ export default class OfferController extends Controller {
   };
 
   public createOffer = async (
-    { body, user }: Request<Record<string, unknown>, Record<string, unknown>, CreateOfferDto>,
+    req: Request<Record<string, unknown>, Record<string, unknown>, CreateOfferDto>,
     res: Response): Promise<void> => {
-    const createdOffer = await this.offerService.create({...body, authorId: user.id, rating: 1, commentCount: 0});
-    this.created(res, fillDTO(OffersRDO, createdOffer));
+    console.log(req.headers);
+    console.log(req.body);
+
+    res.sendStatus(200);
+    // const createdOffer = await this.offerService.create({...body, authorId: user.id, rating: 1, commentCount: 0, isPremium: false });
+    // this.created(res, fillDTO(OffersRDO, createdOffer));
   };
 
   public updateOffer = async (
