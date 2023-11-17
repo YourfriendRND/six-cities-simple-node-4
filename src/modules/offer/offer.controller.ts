@@ -17,6 +17,7 @@ import ValidateDtoMiddleware from '../../core/middlewares/validate-dto.middlewar
 import DocumentExistMiddleware from '../../core/middlewares/document-exists.middleware.js';
 import PrivateRouteMiddleware from '../../core/middlewares/private-route.middleware.js';
 import OwnerEntityMiddleware from '../../core/middlewares/owner-entity.middleware.js';
+import FormDataMiddleware from '../../core/middlewares/form-data.middleware.js';
 
 type RequestOfferParams = {
   id: string;
@@ -53,8 +54,9 @@ export default class OfferController extends Controller {
       method: HttpMethods.Post,
       handler: this.createOffer,
       middlewares: [
-        new PrivateRouteMiddleware(),
-        new ValidateDtoMiddleware(CreateOfferDto)
+        // new PrivateRouteMiddleware(),
+        // new ValidateDtoMiddleware(CreateOfferDto)
+        new FormDataMiddleware()
       ]
     });
 
@@ -108,8 +110,8 @@ export default class OfferController extends Controller {
   public createOffer = async (
     req: Request<Record<string, unknown>, Record<string, unknown>, CreateOfferDto>,
     res: Response): Promise<void> => {
-    console.log(req.headers);
     console.log(req.body);
+    console.log(req.file);
 
     res.sendStatus(200);
     // const createdOffer = await this.offerService.create({...body, authorId: user.id, rating: 1, commentCount: 0, isPremium: false });

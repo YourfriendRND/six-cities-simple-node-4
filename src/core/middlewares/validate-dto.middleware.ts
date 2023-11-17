@@ -11,11 +11,11 @@ export default class ValidateDtoMiddleware implements MiddlewareInterface {
   ) {}
 
   public execute = async (
-    { body }: Request,
+    req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void> => {
-    const dtoInstance = plainToInstance(this.dto, body);
+    const dtoInstance = plainToInstance(this.dto, req.body);
     const errors = await validate(dtoInstance);
 
     if (errors.length) {
