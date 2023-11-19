@@ -7,8 +7,8 @@ import {
   IsArray,
   // IsUrl,
   ArrayNotEmpty,
-  ArrayMinSize,
-  ArrayMaxSize,
+  // ArrayMinSize,
+  // ArrayMaxSize,
   Min,
   Max,
   IsInt,
@@ -20,7 +20,6 @@ import {
 import { OfferSchemaLimits, CITIES, HOUSING_TYPES, FACILITIES } from '../offer.constants.js';
 import { offerValidateErrorMessage } from './offer-validate-error-message.js';
 import { Type } from 'class-transformer';
-import { File } from 'node:buffer';
 
 export default class CreateOfferDto {
 
@@ -35,15 +34,12 @@ export default class CreateOfferDto {
   @IsEnum(CITIES, {message: offerValidateErrorMessage.city.message })
   public city!: string;
 
-  // @IsUrl({}, { message: offerValidateErrorMessage.prevImageUrl.message })
-  public prevImageUrl!: File;
-
-  @IsArray({message: offerValidateErrorMessage.photos.notArrayMessage})
-  @ArrayNotEmpty({message: offerValidateErrorMessage.photos.emptyArrayMessage })
-  @ArrayMinSize(OfferSchemaLimits.REQUIRED_PHOTOS_COUNT, {message: offerValidateErrorMessage.photos.minArrayLengthMessage })
-  @ArrayMaxSize(OfferSchemaLimits.REQUIRED_PHOTOS_COUNT, {message: offerValidateErrorMessage.photos.maxArrayLengthMessage })
+  // @IsArray({message: offerValidateErrorMessage.photos.notArrayMessage})
+  // @ArrayNotEmpty({message: offerValidateErrorMessage.photos.emptyArrayMessage })
+  // @ArrayMinSize(OfferSchemaLimits.REQUIRED_PHOTOS_COUNT, {message: offerValidateErrorMessage.photos.minArrayLengthMessage })
+  // @ArrayMaxSize(OfferSchemaLimits.REQUIRED_PHOTOS_COUNT, {message: offerValidateErrorMessage.photos.maxArrayLengthMessage })
   // @IsUrl({}, {message: offerValidateErrorMessage.photos.elementShouldBeUrl, each: true })
-  public photos!: string[];
+  // public photos!: string[];
 
   public rating!: number;
 

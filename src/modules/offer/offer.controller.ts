@@ -17,7 +17,10 @@ import ValidateDtoMiddleware from '../../core/middlewares/validate-dto.middlewar
 import DocumentExistMiddleware from '../../core/middlewares/document-exists.middleware.js';
 import PrivateRouteMiddleware from '../../core/middlewares/private-route.middleware.js';
 import OwnerEntityMiddleware from '../../core/middlewares/owner-entity.middleware.js';
-import FormDataMiddleware from '../../core/middlewares/form-data.middleware.js';
+import FormDataParserMiddleware from '../../core/middlewares/form-data-parser.middleware.js';
+import ValidatePhotosMiddleware from '../../core/middlewares/validate-photos.middleware.js';
+import { ConfigInterface } from '../../core/config/config.interface.js';
+import { RestSchema } from '../../core/config/rest.schema.js';
 
 type RequestOfferParams = {
   id: string;
@@ -28,10 +31,11 @@ export default class OfferController extends Controller {
   constructor(
     @inject(AppComponent.LoggerInterface) protected readonly logger: LoggerInterface,
     @inject(AppComponent.OfferServiceInterface) private readonly offerService: OfferService,
+    @inject(AppComponent.ConfigInterface) private readonly config: ConfigInterface<RestSchema>,
   ) {
     super(logger);
 
-    this.logger.info('Regiser routers for offer controller...');
+    this.logger.info('Register routers for offer controller...');
 
     this.addRoute({
       path: '/',
@@ -54,9 +58,10 @@ export default class OfferController extends Controller {
       method: HttpMethods.Post,
       handler: this.createOffer,
       middlewares: [
-        // new PrivateRouteMiddleware(),
-        // new ValidateDtoMiddleware(CreateOfferDto)
-        new FormDataMiddleware()
+        new FormDataParserMiddleware('photos', 6, this.config.get('UPLOAD_DIR')),
+        new PrivateRouteMiddleware(),
+        new ValidateDtoMiddleware(CreateOfferDto, 'data'),
+        new ValidatePhotosMiddleware('photos', 6),
       ]
     });
 
@@ -72,6 +77,7 @@ export default class OfferController extends Controller {
         new OwnerEntityMiddleware(this.offerService, 'Offers', 'id')
       ]
     });
+
     this.addRoute({
       path: '/:id',
       method: HttpMethods.Delete,
@@ -111,7 +117,7 @@ export default class OfferController extends Controller {
     req: Request<Record<string, unknown>, Record<string, unknown>, CreateOfferDto>,
     res: Response): Promise<void> => {
     console.log(req.body);
-    console.log(req.file);
+    console.log(req.files);
 
     res.sendStatus(200);
     // const createdOffer = await this.offerService.create({...body, authorId: user.id, rating: 1, commentCount: 0, isPremium: false });
