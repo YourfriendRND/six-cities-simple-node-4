@@ -12,6 +12,9 @@ import { DataBaseClientInterface } from '../database-client/database-client.inte
 import { LoggerInterface } from '../logger/logger.interface';
 import { CliCommandInterface } from './cli-command.interface';
 import { Offer } from '../../types/offer.type';
+import ConfigService from '../config/config.service.js';
+import { RestSchema } from '../config/rest.schema.js';
+import { ConfigInterface } from '../config/config.interface.js';
 
 const DEFAULT_DB_PORT = '27017';
 const DEFAULT_USER_PASSWORD = '000111';
@@ -23,10 +26,12 @@ export default class ImportCommand implements CliCommandInterface {
   private databaseClient!: DataBaseClientInterface;
   private logger!: LoggerInterface;
   private salt!: string;
+  private config: ConfigInterface<RestSchema>;
 
   constructor() {
     this.logger = new ConsoleLoggerService();
-    this.offerService = new OfferService(this.logger, OfferModel);
+    this.config = new ConfigService(this.logger);
+    this.offerService = new OfferService(this.logger, OfferModel, this.config);
     this.userService = new UserService(this.logger, UserModel);
     this.databaseClient = new DataBaseClientService(this.logger);
   }

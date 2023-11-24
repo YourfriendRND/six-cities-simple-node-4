@@ -23,9 +23,6 @@ export class OfferEntity extends defaultClasses.TimeStamps {
     @prop({ required: true, minlength: OfferSchemaLimits.MIN_DESC_LENGTH, maxlength: OfferSchemaLimits.MAX_DESC_LENGTH })
     public description!: string;
 
-    @prop({ required: true })
-    public publishDate!: string;
-
     @prop({ required: true, validate: [ validateCityName, `The city name should be one of these cities: ${CITIES.join(', ')}` ] })
     public city!: string;
 

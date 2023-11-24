@@ -10,19 +10,23 @@ import { CITIES, OfferSchemaLimits } from './offer.constants.js';
 import { SortType } from '../../types/sort-type.enum.js';
 import { Offer } from '../../types/offer.type.js';
 import ReceivedSpecificOfferDto from './dto/received-specific-offer.dto.js';
+import { ConfigInterface } from '../../core/config/config.interface.js';
+import { RestSchema } from '../../core/config/rest.schema.js';
 
 @injectable()
 export default class OfferService implements OfferServiceInterface {
 
   constructor(
         @inject(AppComponent.LoggerInterface) private readonly logger: LoggerInterface,
-        @inject(AppComponent.OfferModel) private readonly offerModel: types.ModelType<OfferEntity>
+        @inject(AppComponent.OfferModel) private readonly offerModel: types.ModelType<OfferEntity>,
+        @inject(AppComponent.ConfigInterface) private readonly config: ConfigInterface<RestSchema>,
   ) {}
 
   public create = async (dto: CreateOfferDto): Promise<DocumentType<OfferEntity>> => {
     const createdOffer = await this.offerModel.create(dto);
     this.logger.info('New offer has been created in the database');
-
+    createdOffer.photos = createdOffer.photos.map((photoUrl) => `${this.config.get('DOMAIN_PATH')}/${photoUrl}`);
+    createdOffer.prevImageUrl = `${this.config.get('DOMAIN_PATH')}/${createdOffer.prevImageUrl}`;
     return createdOffer;
   };
 
@@ -52,6 +56,8 @@ export default class OfferService implements OfferServiceInterface {
       {
         $match: {'isActive': true, 'city': city}
       },
+      {$sort: {'createdAt': SortType.Down}},
+      {$limit: limit},
       {
         $lookup: {
           from: 'comments',
@@ -83,28 +89,43 @@ export default class OfferService implements OfferServiceInterface {
           }
         }
       },
-      { $addFields: {
-        id: { $toString: '$_id'},
-        authorId: { $toString: '$authorId'},
-        commentCount: { $size: '$comments'},
-        rating: {
-          $cond: {
-            if: { $eq: [{$size: '$comments'}, 0] },
-            then: 0,
-            else: { $round: [{$divide: [ {$sum: '$comments.rating'},{ $size: '$comments'}]}, 1]}
+      {
+        $addFields: {
+          id: { $toString: '$_id'},
+          authorId: { $toString: '$authorId'},
+          commentCount: { $size: '$comments'},
+          rating: {
+            $cond: {
+              if: { $eq: [{$size: '$comments'}, 0] },
+              then: 0,
+              else: { $round: [{$divide: [ {$sum: '$comments.rating'},{ $size: '$comments'}]}, 1]}
+            }
+          },
+          isFavorite: {
+            $cond: {
+              if: { $in: ['$_id', '$favoriteOfferIds']},
+              then: true,
+              else: false
+            }
           }
         },
-        isFavorite: {
-          $cond: {
-            if: { $in: ['$_id', '$favoriteOfferIds']},
-            then: true,
-            else: false
+      },
+      {
+        $set: {
+          photos: {
+            $map: {
+              input:'$photos',
+              as: 'item',
+              in: {
+                $concat: [`${this.config.get('DOMAIN_PATH')}`, '$$item']
+              }
+            },
+          },
+          prevImageUrl: {
+            $concat: [`${this.config.get('DOMAIN_PATH')}`, '$prevImageUrl']
           }
         }
       },
-      },
-      {$limit: limit},
-      {$sort: {'createdAt': SortType.Down}},
       {$unset: ['comments', 'favoriteOfferIds', 'favorites']}
     ]);
 
@@ -159,8 +180,9 @@ export default class OfferService implements OfferServiceInterface {
           }
         }
       },
-      { $addFields:
-        { id: { $toString: '$_id'},
+      {
+        $addFields: {
+          id: { $toString: '$_id'},
           commentCount: { $size: '$comments'},
           rating: {
             $cond: {
@@ -177,6 +199,22 @@ export default class OfferService implements OfferServiceInterface {
             }
           }
         },
+      },
+      {
+        $set: {
+          photos: {
+            $map: {
+              input:'$photos',
+              as: 'item',
+              in: {
+                $concat: [`${this.config.get('DOMAIN_PATH')}`, '$$item']
+              }
+            },
+          },
+          prevImageUrl: {
+            $concat: [`${this.config.get('DOMAIN_PATH')}`, '$prevImageUrl']
+          }
+        }
       },
       {$unset: [
         'comments',
@@ -196,6 +234,13 @@ export default class OfferService implements OfferServiceInterface {
       ...targetOffer,
       author: {...targetOffer.author[0]}
     } : null;
+  };
+
+  public findMyOffers = async (
+    _ownerId: string,
+    _limit = OfferSchemaLimits.DEFAULT_OFFER_REQUEST_LIMIT,
+  ): Promise<Offer[]> => {
+    throw new Error('Not implemented yet');
   };
 
   public exists = async (documentId: string): Promise<boolean> => {

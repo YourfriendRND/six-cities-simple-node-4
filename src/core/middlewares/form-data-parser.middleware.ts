@@ -8,15 +8,16 @@ export default class FormDataParserMiddleware implements MiddlewareInterface {
   constructor(
     private readonly filesFieldName: string,
     private readonly maxCountElements: number,
-    private readonly uloadDirName: string,
+    private readonly uploadDirName: string,
   ) {}
 
   public execute = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 
     console.log('first middleware', req.files);
+    const userId = req.user.id;
 
     const storage = multer.diskStorage({
-      destination: `./${this.uloadDirName}`,
+      destination: `./${this.uploadDirName}/${userId}`,
       filename: (_req, file, callback) => {
         const extention = mime.extension(file.mimetype);
         const fileName = nanoid();

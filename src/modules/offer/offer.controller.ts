@@ -21,6 +21,8 @@ import FormDataParserMiddleware from '../../core/middlewares/form-data-parser.mi
 import ValidatePhotosMiddleware from '../../core/middlewares/validate-photos.middleware.js';
 import { ConfigInterface } from '../../core/config/config.interface.js';
 import { RestSchema } from '../../core/config/rest.schema.js';
+import HTTPError from '../../core/errors/http-error.js';
+import { StatusCodes } from 'http-status-codes';
 
 type RequestOfferParams = {
   id: string;
@@ -58,8 +60,8 @@ export default class OfferController extends Controller {
       method: HttpMethods.Post,
       handler: this.createOffer,
       middlewares: [
-        new FormDataParserMiddleware('photos', 6, this.config.get('UPLOAD_DIR')),
         new PrivateRouteMiddleware(),
+        new FormDataParserMiddleware('photos', 6, this.config.get('UPLOAD_DIR')),
         new ValidateDtoMiddleware(CreateOfferDto, 'data'),
         new ValidatePhotosMiddleware('photos', 6),
       ]
@@ -114,14 +116,30 @@ export default class OfferController extends Controller {
   };
 
   public createOffer = async (
-    req: Request<Record<string, unknown>, Record<string, unknown>, CreateOfferDto>,
+    req: Request<Record<string, unknown>, Record<string, unknown>, {data: string}>,
     res: Response): Promise<void> => {
     console.log(req.body);
     console.log(req.files);
 
-    res.sendStatus(200);
-    // const createdOffer = await this.offerService.create({...body, authorId: user.id, rating: 1, commentCount: 0, isPremium: false });
-    // this.created(res, fillDTO(OffersRDO, createdOffer));
+    if (!req.files?.length || !Array.isArray(req.files)) {
+      throw new HTTPError(StatusCodes.BAD_REQUEST, 'Photos for offers has not been uploaded', `${OfferController.name}`);
+    }
+
+    const photos = req.files.map((file) => file.path.replace('\x2F', '/')); // TODO: Нужно заменить \\ на / или взять другие пути
+
+    const rowOffer: CreateOfferDto = {
+      ...JSON.parse(req.body.data),
+      prevImageUrl: photos[0],
+      photos,
+      authorId: req.user.id,
+      rating: 1,
+      commentCount: 0,
+      isPremium: false,
+      isActive: true,
+    };
+
+    const createdOffer = await this.offerService.create(rowOffer);
+    this.created(res, fillDTO(OffersRDO, createdOffer));
   };
 
   public updateOffer = async (
