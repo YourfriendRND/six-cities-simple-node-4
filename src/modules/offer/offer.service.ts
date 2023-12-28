@@ -237,11 +237,44 @@ export default class OfferService implements OfferServiceInterface {
   };
 
   public findMyOffers = async (
-    _ownerId: string,
+    ownerId: string,
     _limit = OfferSchemaLimits.DEFAULT_OFFER_REQUEST_LIMIT,
-  ): Promise<Offer[]> => {
-    throw new Error('Not implemented yet');
-  };
+  ): Promise<Offer[]> => await this.offerModel.aggregate([
+    // {
+    //   $lookup: {
+    //     from: 'user',
+    //     let: {userId: '$authorId'},
+    //     pipeline: [
+    //       {$match: {$expr: {$eq: ['$$userId', '$_id']}}}
+    //     ],
+    //     as: 'author',
+    //   },
+    // },
+    {
+      $match: { $expr : { $eq: [ '$authorId' , { $toObjectId: ownerId } ] } }
+    },
+    {
+      $set: {
+        photos: {
+          $map: {
+            input:'$photos',
+            as: 'item',
+            in: {
+              $concat: [`${this.config.get('DOMAIN_PATH')}`, '$$item']
+            }
+          },
+        },
+        prevImageUrl: {
+          $concat: [`${this.config.get('DOMAIN_PATH')}`, '$prevImageUrl']
+        }
+      }
+    },
+    {
+      $addFields: {
+        id: { $toString: '$_id'},
+      }
+    }
+  ]);
 
   public exists = async (documentId: string): Promise<boolean> => {
     const document = await this.offerModel.exists({_id: documentId});

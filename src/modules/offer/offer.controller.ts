@@ -46,6 +46,15 @@ export default class OfferController extends Controller {
     });
 
     this.addRoute({
+      path: '/my/',
+      method: HttpMethods.Get,
+      handler: this.getAuthorOffers,
+      middlewares: [
+        new PrivateRouteMiddleware(),
+      ],
+    });
+
+    this.addRoute({
       path: '/:id',
       method: HttpMethods.Get,
       handler: this.exactOffer,
@@ -99,7 +108,7 @@ export default class OfferController extends Controller {
     console.log('Query to offers received');
     const ownerId = user ? user.id : undefined;
     const offers = await this.offerService.find(query.city, query.limit, ownerId);
-    console.log(offers);
+    // console.log(offers);
 
     const offersResponse = offers.length ? fillDTO(OffersRDO, offers) : [];
     this.ok(res, offersResponse);
@@ -109,23 +118,37 @@ export default class OfferController extends Controller {
     { params, user }: Request<core.ParamsDictionary | RequestOfferParams>,
     res: Response
   ): Promise<void> => {
+    console.log('exact');
     const userId = user ? user.id : undefined;
     const offer = await this.offerService.findByOfferId(params.id, userId);
     const offerResponse = fillDTO(OfferRDO, offer);
     this.ok(res, offerResponse);
   };
 
+  public getAuthorOffers = async (
+    { user }: Request<core.ParamsDictionary | RequestOfferParams>,
+    res: Response,
+  ): Promise<void> => {
+    const userId = user.id;
+    const offers = await this.offerService.findMyOffers(userId);
+    console.log(offers);
+    const response = fillDTO(OfferRDO, offers);
+
+    this.ok(res, response);
+
+  };
+
   public createOffer = async (
     req: Request<Record<string, unknown>, Record<string, unknown>, {data: string}>,
     res: Response): Promise<void> => {
-    console.log(req.body);
-    console.log(req.files);
+    // console.log(req.body);
+    // console.log(req.files);
 
     if (!req.files?.length || !Array.isArray(req.files)) {
       throw new HTTPError(StatusCodes.BAD_REQUEST, 'Photos for offers has not been uploaded', `${OfferController.name}`);
     }
 
-    const photos = req.files.map((file) => file.path.replace('\x2F', '/')); // TODO: Нужно заменить \\ на / или взять другие пути
+    const photos = req.files.map((file) => file.path.replace('\x2F', '/'));
 
     const rowOffer: CreateOfferDto = {
       ...JSON.parse(req.body.data),
